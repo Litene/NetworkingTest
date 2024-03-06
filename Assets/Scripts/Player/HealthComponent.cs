@@ -27,7 +27,12 @@ namespace Player {
 		}
 		
 		public MonoBehaviour Source { get; set; }
-		public void Initialize<T>(T source) where T : MonoBehaviour => this.Source = source;
+		public bool IsServerOwner { get; set; }
+
+		public void Initialize<T>(T source, bool isOwner) where T : MonoBehaviour {
+			this.Source = source;
+			IsServerOwner = isOwner;
+		}
 		public int GetHealth() => CurrentHealth.Value;
 		public HealthComponent(int health) {
 			_health = health;
@@ -42,14 +47,5 @@ namespace Player {
 
 	public interface IDamager {
 		public void DealDamage(IDamageable target, int amount);
-	}
-
-	public interface IComponent {
-		MonoBehaviour Source { get; set; }
-		public void Initialize<T>(T source) where T : MonoBehaviour {}
-		public void Tick(float deltaTime){}
-
-		public void Execute(){}
-
 	}
 }

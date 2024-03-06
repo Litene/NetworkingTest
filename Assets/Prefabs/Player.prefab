@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2528977142984008424}
   - component: {fileID: 7514443995235508331}
   - component: {fileID: 4565770797636307384}
+  - component: {fileID: 5851821875430036874}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -48,7 +49,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1420274584
+  GlobalObjectIdHash: 2417519701
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -102,6 +103,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _serverProjectilePrefab: {fileID: 8720499325224933824, guid: b2d0d518d4e01f540a5251df467c64f5, type: 3}
   _clientProjectilePrefab: {fileID: 1863839418481534399, guid: aca08766a00f6db4a9ff0ce380a8f719, type: 3}
+--- !u!114 &5851821875430036874
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2591421554312408826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb5af246f6cf3a447a9d1accb472e314, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _serverPrefab: {fileID: 8720499325224933824, guid: b2d0d518d4e01f540a5251df467c64f5, type: 3}
+  _clientPrefab: {fileID: 1863839418481534399, guid: aca08766a00f6db4a9ff0ce380a8f719, type: 3}
 --- !u!1 &2933469731141257316
 GameObject:
   m_ObjectHideFlags: 0
@@ -561,6 +576,7 @@ GameObject:
   - component: {fileID: 929381967538781494}
   - component: {fileID: 5338739113762653439}
   - component: {fileID: 8544673253022304416}
+  - component: {fileID: 1659265824638515998}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -668,6 +684,49 @@ MonoBehaviour:
   InLocalSpace: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!68 &1659265824638515998
+EdgeCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8840674323746810985}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_EdgeRadius: 0
+  m_Points:
+  - {x: 0.0034655333, y: 0.58559114}
+  - {x: -0.5002666, y: -0.29095656}
+  - {x: 0.51286066, y: -0.29213226}
+  - {x: 0.003465533, y: 0.5855911}
+  m_AdjacentStartPoint: {x: 0, y: 0}
+  m_AdjacentEndPoint: {x: 0, y: 0}
+  m_UseAdjacentStartPoint: 0
+  m_UseAdjacentEndPoint: 0
 --- !u!1 &9143326922552533806
 GameObject:
   m_ObjectHideFlags: 0

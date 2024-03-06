@@ -4,6 +4,7 @@ namespace Player {
 	public class MoveComponent : IComponent {
 
 		public MonoBehaviour Source { get; set; }
+		public bool IsServerOwner { get; set; }
 
 		private const float RotationSpeed = 5f;
 		private const float MovementSpeed = 10f;
@@ -11,8 +12,10 @@ namespace Player {
 		private Transform _bodyTf;
 		private Transform _tf;
 		private Camera _camera;
-		public void Initialize<T>(T source) where T : MonoBehaviour {
+		public void Initialize<T>(T source, bool isOwner) where T : MonoBehaviour {
+			
 			this.Source = source;
+			IsServerOwner = isOwner;
 			if ((Source is PlayerController controller)) {
 				_bodyTf = controller.GetChild("Body");
 			}

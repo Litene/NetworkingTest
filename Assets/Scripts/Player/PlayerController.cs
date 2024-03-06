@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UI;
@@ -10,54 +12,74 @@ using Random = UnityEngine.Random;
 using SF = UnityEngine.SerializeField;
 
 namespace Player {
-	public class PlayerController : NetworkBehaviour, IPlayerActions, IMonoExtension.ITransformLookup {
+    public class PlayerController : NetworkBehaviour, IPlayerActions, IMonoExtension.ITransformLookup {
+        [SF] private GameObject _serverProjectilePrefab;
+        [SF] private GameObject _clientProjectilePrefab;
 
-		[SF] private GameObject _serverProjectilePrefab;
-		[SF] private GameObject _clientProjectilePrefab;
-		
-		private List<IComponent> _components;
-		public Dictionary<string, Transform> TransformsLookup { get; set; } = new();
-		public T GetControllerComponent<T>() where T : IComponent => _components.OfType<T>().FirstOrDefault(); // this should be a dictionary to reduce lookup time. 
+        private List<IComponent> _components;
+        public Dictionary<string, Transform> TransformsLookup { get; set; } = new();
 
-		private InputScheme _input;
-		private void Awake() {
-			if (_input is null) {
-				_input = new();
-				_input.Player.SetCallbacks(this);
-			}
+        public T GetControllerComponent<T>() where T : IComponent =>
+            _components.OfType<T>().FirstOrDefault(); // this should be a dictionary to reduce lookup time. 
 
-			_input.Player.Enable();
+        private InputScheme _input;
 
-			_components = new List<IComponent> {
-				new HealthComponent(10),
-				new MoveComponent(),
-				new HealthUIComponent(),
-				new ShootComponent(_serverProjectilePrefab, _clientProjectilePrefab)
-			};
+        private void Awake() {
+            if (_input is null) {
+                _input = new();
+                _input.Player.SetCallbacks(this);
+            }
 
-			InitializeLookup(transform);
+            _input.Player.Enable();
 
-			_components.ForEach(component => component.Initialize(this));
-		}
+            _components = new List<IComponent> {
+                new HealthComponent(10),
+                new MoveComponent(),
+                new HealthUIComponent(),
+                //new ShootComponent(_serverProjectilePrefab, _clientProjectilePrefab)
+            };
+            
+            _components.Add(GetComponent<ShootComponent>());
 
-		private void Start() => transform.position = new Vector3(Random.Range(-10, 10), Random.Range(-4, 4));
-		private void Update() => _components.ForEach(component => component.Tick(Time.deltaTime));
+            InitializeLookup(transform);
+        }
 
-		public void OnShoot(InputAction.CallbackContext context) {
-			if (context.performed) GetControllerComponent<ShootComponent>().Execute();
+        private void Start() {
+          // throw new NotImplementedException();
+        }
 
-			//if (context.performed) GetControllerComponent<HealthComponent>().TakeDamage(1); // this is damage test
-		}
+        public override void OnNetworkSpawn() {
+          Debug.Log("called");
+             _components.ForEach(component =>
+                component.Initialize(this, IsOwner)); // possible race condition, IsOwner is not set in awake. 
+            transform.position = new Vector3(Random.Range(-10, 10), Random.Range(-4, 4));
+        }
 
-		public void InitializeLookup(Transform source) {
-			foreach (Transform child in source) {
-				TransformsLookup[child.name] = child;
-				if (child.childCount > 0) InitializeLookup(child);
-			}
-		}
+        // private void Start() {
+        //     _components.ForEach(component =>
+        //         component.Initialize(this, IsOwner)); // possible race condition, IsOwner is not set in awake. 
+        //     transform.position = new Vector3(Random.Range(-10, 10), Random.Range(-4, 4));
+        // }
 
-		public Transform GetChild(string childName) =>
-			TransformsLookup.TryGetValue(childName, out Transform child) ? child : null;
+        private void Update() => _components.ForEach(component => component.Tick(Time.deltaTime));
 
-	}
+        public void OnShoot(InputAction.CallbackContext context) {
+            if (!IsOwner) return;
+            
+            if (context.performed) GetControllerComponent<ShootComponent>().Execute();
+            
+
+            //if (context.performed) GetControllerComponent<HealthComponent>().TakeDamage(1); // this is damage test
+        }
+
+        public void InitializeLookup(Transform source) {
+            foreach (Transform child in source) {
+                TransformsLookup[child.name] = child;
+                if (child.childCount > 0) InitializeLookup(child);
+            }
+        }
+
+        public Transform GetChild(string childName) =>
+            TransformsLookup.TryGetValue(childName, out Transform child) ? child : null;
+    }
 }

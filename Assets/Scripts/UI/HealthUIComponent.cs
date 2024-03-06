@@ -4,14 +4,15 @@ using UnityEngine.UI;
 
 namespace UI {
 	public class HealthUIComponent : IComponent {
-
 		public MonoBehaviour Source { get; set; }
+		public bool IsServerOwner { get; set; }
 		private Slider _slider;
 		private HealthComponent _healthComponent;
 		private Image _image;
 
-		public void Initialize<T>(T source) where T : MonoBehaviour {
+		public void Initialize<T>(T source, bool isOwner) where T : MonoBehaviour {
 			Source = source;
+			IsServerOwner = isOwner;
 
 			if (Source is PlayerController controller) {
 				_healthComponent = controller.GetControllerComponent<HealthComponent>();
