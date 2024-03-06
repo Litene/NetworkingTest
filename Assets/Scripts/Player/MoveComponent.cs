@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 
 namespace Player {
 	public class MoveComponent : IComponent {
 
-		public MonoBehaviour Source { get; set; }
+		public NetworkBehaviour Source { get; set; }
 
 		private const float RotationSpeed = 5f;
 		private const float MovementSpeed = 10f;
@@ -11,7 +12,7 @@ namespace Player {
 		private Transform _bodyTf;
 		private Transform _tf;
 		private Camera _camera;
-		public void Initialize<T>(T source) where T : MonoBehaviour {
+		public void Initialize<T>(T source) where T : NetworkBehaviour {
 			this.Source = source;
 			if ((Source is PlayerController controller)) {
 				_bodyTf = controller.GetChild("Body");

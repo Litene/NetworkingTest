@@ -7,9 +7,12 @@ namespace Network {
 	public class Projectile : NetworkBehaviour {
 
 		private GameObject _owner;
+		
 		private float MovementSpeed { get; set; } = 20;
-
-		public void Initialize(GameObject owner) => _owner = owner;
+		public void Initialize(GameObject owner) {
+			Physics2D.IgnoreCollision(owner.GetComponentInChildren<Collider2D>(), GetComponent<Collider2D>());
+			_owner = owner;
+		} 
 		private void OnTriggerEnter(Collider other) {
 			if (other.CompareTag("Player") && other.gameObject != _owner) {
 				Debug.Log("We do be hit");

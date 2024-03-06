@@ -26,8 +26,8 @@ namespace Player {
 			return GetHealth();
 		}
 		
-		public MonoBehaviour Source { get; set; }
-		public void Initialize<T>(T source) where T : MonoBehaviour => this.Source = source;
+		public NetworkBehaviour Source { get; set; }
+		public void Initialize<T>(T source) where T : NetworkBehaviour => this.Source = source;
 		public int GetHealth() => CurrentHealth.Value;
 		public HealthComponent(int health) {
 			_health = health;
@@ -45,8 +45,8 @@ namespace Player {
 	}
 
 	public interface IComponent {
-		MonoBehaviour Source { get; set; }
-		public void Initialize<T>(T source) where T : MonoBehaviour {}
+		NetworkBehaviour Source { get; set; }
+		public void Initialize<T>(T source) where T : NetworkBehaviour {}
 		public void Tick(float deltaTime){}
 
 		public void Execute(){}

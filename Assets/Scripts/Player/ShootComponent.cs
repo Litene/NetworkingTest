@@ -10,9 +10,9 @@ namespace Player {
 		private readonly GameObject _clientPrefab;
 		private Transform _bodyTf;
 		private Transform _muzzleTf;
-		public MonoBehaviour Source { get; set; }
+		public NetworkBehaviour Source { get; set; }
 
-		public void Initialize<T>(T source) where T : MonoBehaviour {
+		public void Initialize<T>(T source) where T : NetworkBehaviour {
 			Source = source;
 			if (Source is not PlayerController controller) return;
 			_muzzleTf = controller.GetChild("Muzzle");
@@ -25,11 +25,11 @@ namespace Player {
 		}
 
 		public void Execute() {
-			if (Source is not NetworkBehaviour networkBehaviour) return;
-			if (networkBehaviour.IsHost) ShootServerRpc();
-			else ShootClientRpc();
+			ShootLocal();
 		}
 
+		
+		
 		[ServerRpc] private void ShootServerRpc() {
 			Debug.Log("we are shooting on server");
 			GameObject projectile = Object.Instantiate(_serverPrefab, _muzzleTf.position, _bodyTf.rotation);
@@ -38,10 +38,17 @@ namespace Player {
 		}
 
 		[ClientRpc] private void ShootClientRpc() {
-			Debug.Log("we are shooting on client");
+			if (Source.IsOwner) return;
+			
 			GameObject projectile = Object.Instantiate(_clientPrefab, _muzzleTf.position, _bodyTf.rotation);
 			projectile.GetComponent<Projectile>()?.Initialize(Source.gameObject);
 
+		}
+
+		private void ShootLocal() {
+			GameObject projectile = Object.Instantiate(_serverPrefab, _muzzleTf.position, _bodyTf.rotation);
+			projectile.GetComponent<Projectile>()?.Initialize(Source.gameObject);
+			ShootServerRpc();
 		}
 
 

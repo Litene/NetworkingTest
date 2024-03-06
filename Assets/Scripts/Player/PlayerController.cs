@@ -5,6 +5,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Utility;
+using Network;
 using static InputScheme;
 using Random = UnityEngine.Random;
 using SF = UnityEngine.SerializeField;
@@ -44,7 +45,8 @@ namespace Player {
 		private void Update() => _components.ForEach(component => component.Tick(Time.deltaTime));
 
 		public void OnShoot(InputAction.CallbackContext context) {
-			if (context.performed) GetControllerComponent<ShootComponent>().Execute();
+			if (context.performed && IsOwner) ShootLocal();
+			//GetControllerComponent<ShootComponent>().Execute();
 
 			//if (context.performed) GetControllerComponent<HealthComponent>().TakeDamage(1); // this is damage test
 		}
@@ -59,5 +61,23 @@ namespace Player {
 		public Transform GetChild(string childName) =>
 			TransformsLookup.TryGetValue(childName, out Transform child) ? child : null;
 
+		[ServerRpc] private void ShootServerRpc() {
+			GameObject projectile = Instantiate(_serverProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
+			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
+			ShootClientRpc();
+		}
+
+		[ClientRpc] private void ShootClientRpc() {
+			if (IsOwner) return;
+			GameObject projectile = Instantiate(_clientProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
+			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
+		}
+
+		private void ShootLocal() {
+			GameObject projectile = Instantiate(_clientProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
+			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
+			
+			ShootServerRpc();
+		}
 	}
 }
