@@ -1,16 +1,17 @@
 using Player;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UI {
 	public class HealthUIComponent : IComponent {
 
-		public MonoBehaviour Source { get; set; }
+		public NetworkBehaviour Source { get; set; }
 		private Slider _slider;
 		private HealthComponent _healthComponent;
 		private Image _image;
 
-		public void Initialize<T>(T source) where T : MonoBehaviour {
+		public void Initialize<T>(T source) where T : NetworkBehaviour {
 			Source = source;
 
 			if (Source is PlayerController controller) {
