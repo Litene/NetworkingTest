@@ -11,73 +11,82 @@ using Random = UnityEngine.Random;
 using SF = UnityEngine.SerializeField;
 
 namespace Player {
-	public class PlayerController : NetworkBehaviour, IPlayerActions, IMonoExtension.ITransformLookup {
+    public class PlayerController : NetworkBehaviour, IPlayerActions, IMonoExtension.ITransformLookup {
+        [SF] private GameObject _serverProjectilePrefab;
+        [SF] private GameObject _clientProjectilePrefab;
 
-		[SF] private GameObject _serverProjectilePrefab;
-		[SF] private GameObject _clientProjectilePrefab;
-		
-		private List<IComponent> _components;
-		public Dictionary<string, Transform> TransformsLookup { get; set; } = new();
-		public T GetControllerComponent<T>() where T : IComponent => _components.OfType<T>().FirstOrDefault(); // this should be a dictionary to reduce lookup time. 
+        private List<IComponent> _components;
+        public Dictionary<string, Transform> TransformsLookup { get; set; } = new();
 
-		private InputScheme _input;
-		private void Awake() {
-			if (_input is null) {
-				_input = new();
-				_input.Player.SetCallbacks(this);
-			}
+        public T GetControllerComponent<T>() where T : IComponent =>
+            _components.OfType<T>().FirstOrDefault(); // this should be a dictionary to reduce lookup time. 
 
-			_input.Player.Enable();
+        private InputScheme _input;
 
-			_components = new List<IComponent> {
-				new HealthComponent(10),
-				new MoveComponent(),
-				new HealthUIComponent(),
-				new ShootComponent(_serverProjectilePrefab, _clientProjectilePrefab)
-			};
+        private void Awake() {
+            if (_input is null) {
+                _input = new();
+                _input.Player.SetCallbacks(this);
+            }
 
-			InitializeLookup(transform);
+            _input.Player.Enable();
 
-			_components.ForEach(component => component.Initialize(this));
-		}
+            _components = new List<IComponent> {
+                new HealthComponent(10),
+                new MoveComponent(),
+                new HealthUIComponent(),
+                new ShootComponent(_serverProjectilePrefab.gameObject, _clientProjectilePrefab.gameObject)
+            };
 
-		private void Start() => transform.position = new Vector3(Random.Range(-10, 10), Random.Range(-4, 4));
-		private void Update() => _components.ForEach(component => component.Tick(Time.deltaTime));
+            InitializeLookup(transform);
 
-		public void OnShoot(InputAction.CallbackContext context) {
-			if (context.performed && IsOwner) ShootLocal();
-			//GetControllerComponent<ShootComponent>().Execute();
+            _components.ForEach(component => component.Initialize(this));
+        }
 
-			//if (context.performed) GetControllerComponent<HealthComponent>().TakeDamage(1); // this is damage test
-		}
+        private void Start() => transform.position = new Vector3(Random.Range(-10, 10), Random.Range(-4, 4));
+        private void Update() => _components.ForEach(component => component.Tick(Time.deltaTime));
 
-		public void InitializeLookup(Transform source) {
-			foreach (Transform child in source) {
-				TransformsLookup[child.name] = child;
-				if (child.childCount > 0) InitializeLookup(child);
-			}
-		}
+        public void OnShoot(InputAction.CallbackContext context) {
+            if (!context.performed || !IsOwner) return;
 
-		public Transform GetChild(string childName) =>
-			TransformsLookup.TryGetValue(childName, out Transform child) ? child : null;
+            NetworkController.Singleton.ClientSpawn(_clientProjectilePrefab, GetChild("Muzzle").position,
+                GetChild("Body").rotation);
+            NetworkController.Singleton.ServerSpawn(_serverProjectilePrefab, GetChild("Muzzle").position,
+                GetChild("Body").rotation);
+        }
 
-		[ServerRpc] private void ShootServerRpc() {
-			GameObject projectile = Instantiate(_serverProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
-			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
-			ShootClientRpc();
-		}
+        public override void OnNetworkSpawn() {
+            if (IsOwner) GameObject.Find("NetworkController").GetComponent<NetworkObject>().ChangeOwnership(GetComponent<NetworkObject>().OwnerClientId);
+            
+        }
 
-		[ClientRpc] private void ShootClientRpc() {
-			if (IsOwner) return;
-			GameObject projectile = Instantiate(_clientProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
-			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
-		}
+        public void InitializeLookup(Transform source) {
+            foreach (Transform child in source) {
+                TransformsLookup[child.name] = child;
+                if (child.childCount > 0) InitializeLookup(child);
+            }
+        }
 
-		private void ShootLocal() {
-			GameObject projectile = Instantiate(_clientProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
-			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
-			
-			ShootServerRpc();
-		}
-	}
+        public Transform GetChild(string childName) =>
+            TransformsLookup.TryGetValue(childName, out Transform child) ? child : null;
+
+        // [ServerRpc] private void ShootServerRpc() {
+        // 	GameObject projectile = Instantiate(_serverProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
+        // 	projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
+        // 	ShootClientRpc();
+        // }
+        //
+        // [ClientRpc] private void ShootClientRpc() {
+        // 	if (IsOwner) return;
+        // 	GameObject projectile = Instantiate(_clientProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
+        // 	projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
+        // }
+        //
+        // private void ShootLocal() {
+        // 	GameObject projectile = Instantiate(_clientProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
+        // 	projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
+        // 	
+        // 	ShootServerRpc();
+        // }
+    }
 }
