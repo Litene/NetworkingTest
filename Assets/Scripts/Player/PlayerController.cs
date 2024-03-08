@@ -21,7 +21,28 @@ namespace Player {
 		public T GetControllerComponent<T>() where T : IComponent => _components.OfType<T>().FirstOrDefault(); // this should be a dictionary to reduce lookup time. 
 
 		private InputScheme _input;
-		private void Awake() {
+		// private void Awake() {
+		// 	if (_input is null) {
+		// 		_input = new();
+		// 		_input.Player.SetCallbacks(this);
+		// 	}
+		//
+		// 	_input.Player.Enable();
+		//
+		// 	_components = new List<IComponent> {
+		// 		new HealthComponent(10),
+		// 		new MoveComponent(),
+		// 		new HealthUIComponent(),
+		// 		new ShootComponent(_serverProjectilePrefab, _clientProjectilePrefab)
+		// 	};
+		//
+		// 	InitializeLookup(transform);
+		//
+		// 	_components.ForEach(component => component.Initialize(this));
+		// }
+
+		public override void OnNetworkSpawn() {
+			base.OnNetworkSpawn();
 			if (_input is null) {
 				_input = new();
 				_input.Player.SetCallbacks(this);
@@ -45,6 +66,7 @@ namespace Player {
 		private void Update() => _components.ForEach(component => component.Tick(Time.deltaTime));
 
 		public void OnShoot(InputAction.CallbackContext context) {
+			Debug.Log($"IsOwner: {IsOwner}, action performed: {context.performed}");
 			if (context.performed && IsOwner) ShootLocal();
 			//GetControllerComponent<ShootComponent>().Execute();
 
@@ -62,18 +84,20 @@ namespace Player {
 			TransformsLookup.TryGetValue(childName, out Transform child) ? child : null;
 
 		[ServerRpc] private void ShootServerRpc() {
+			Debug.Log("we are calling serverRPC");
 			GameObject projectile = Instantiate(_serverProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
 			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
 			ShootClientRpc();
 		}
 
-		[ClientRpc] private void ShootClientRpc() {
+		[ClientRpc] private void ShootClientRpc() { // should invoke on itself also, we shouldn't have to call on local first
 			if (IsOwner) return;
+			Debug.Log("WE are calling clinet RPC");
 			GameObject projectile = Instantiate(_clientProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
-			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
+			
 		}
 
-		private void ShootLocal() {
+		private void ShootLocal() { // can only server call clientRPC
 			GameObject projectile = Instantiate(_clientProjectilePrefab, GetChild("Muzzle").position, GetChild("Body").rotation);
 			projectile.GetComponent<Projectile>()?.Initialize(this.gameObject);
 			
